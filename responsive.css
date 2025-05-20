@@ -1,0 +1,344 @@
+/* Responsive CSS to make pages adjust to all devices */
+/* Base adjustments */
+body {
+  padding: 0 10px;
+  overflow-x: hidden;
+}
+
+/* Dashboard-specific body style */
+.dashboard-body {
+  display: block;
+  padding-top: 80px;
+  background: #f9fafc;
+}
+
+/* Container adjustments */
+@media (max-width: 1200px) {
+  .admin-container, .container {
+    padding: 20px;
+    margin: 20px auto;
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 992px) {
+  .container {
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  /* Dashboard adjustments for tablets */
+  .dashboard {
+    padding-top: 60px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  .dashboard-container {
+    padding: 20px;
+  }
+}
+
+/* Tablet and small desktops */
+@media (max-width: 768px) {
+  /* Stack headers vertically */
+  .header, .admin-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-logo {
+    margin-bottom: 15px;
+  }
+  
+  .admin-title {
+    margin-bottom: 15px;
+  }
+  
+  .admin-actions {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  /* Updated dashboard styles for better mobile responsiveness */
+  .dashboard {
+    padding-top: 120px; /* Increased padding to account for stacked header */
+  }
+  
+  .dashboard-container {
+    margin-bottom: 20px;
+  }
+  
+  .dashboard-title {
+    font-size: 20px;
+    padding-bottom: 10px;
+  }
+  
+  /* User menu adjustments */
+  .user-menu {
+    align-self: flex-end;
+  }
+  
+  .user-dropdown {
+    right: 0;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  /* Responsive tables */
+  .user-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .user-table thead {
+    display: none; /* Hide table headers on mobile */
+  }
+  
+  .user-table, 
+  .user-table tbody, 
+  .user-table tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .user-table tr {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .user-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 5px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .user-table td:last-child {
+    border-bottom: none;
+  }
+  
+  .user-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    padding-right: 10px;
+  }
+  
+  .user-table .actions {
+    justify-content: flex-end;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+  
+  .container {
+    padding: 20px 15px;
+    margin: 10px auto;
+  }
+  
+  /* Specific adjustments for index.php on mobile */
+  body[style] {
+    padding-top: 120px !important; /* Override inline style for better mobile spacing */
+  }
+  
+  .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: var(--primary-gradient) !important;
+  }
+
+  /* Logo aligned left */
+  .header-logo {
+    width: auto;
+    justify-content: flex-start;
+  }
+
+  /* User menu aligned right without full width */
+  .user-menu {
+    width: auto;
+    margin-top: 0;
+  }
+
+  /* Dropdown positioned under menu icon (fixed for mobile) */
+  .user-dropdown {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .user-dropdown::before {
+    display: none;
+  }
+
+  .dropdown-header {
+    padding: 15px;
+    font-size: 16px;
+    border-radius: 0;
+    background: var(--primary-gradient);
+    color: white;
+    font-weight: 600;
+  }
+
+  .dropdown-item {
+    padding: 15px;
+    font-size: 15px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+    background: white;
+  }
+
+  .dropdown-item.user-profile {
+    background: #f8f9fa;
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  .dropdown-item.credit {
+    background: #f8f9fa;
+  }
+
+  .dropdown-item i {
+    color: var(--primary-color);
+    width: 24px;
+    margin-right: 10px;
+  }
+
+  .credit-amount {
+    margin-left: auto;
+    font-weight: 600;
+    color: var(--success-color);
+  }
+
+  .header-logo img {
+    max-width: 40px;
+    height: auto;
+  }
+  
+  .header-logo h1 {
+    font-size: 18px;
+    color: #fff !important;
+  }
+  
+  .user-info {
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #fff !important;
+    position: relative;
+    z-index: 1002;
+  }
+  
+  /* Fix for mobile dropdown arrow position */
+  .user-dropdown::before {
+    right: 25px;
+  }
+  
+  /* Make sure dropdown doesn't get cut off */
+  body, html {
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* Dashboard adjustments for mobile */
+  .dashboard {
+    padding-top: 140px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .dashboard-container {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .dashboard-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+  
+  /* Server card adjustments */
+  .dashboard-container button.btn {
+    width: 100% !important;
+    max-width: 250px;
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .admin-actions .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  select {
+    padding: 12px 15px;
+    font-size: 15px;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+    font-size: 15px;
+  }
+  
+  .user-table .actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  h1 {
+    font-size: 22px;
+  }
+  
+  h2 {
+    font-size: 20px;
+  }
+  
+  /* Footer adjustments */
+  div[style="text-align: center; padding: 20px; color: #777; margin-top: 20px;"] {
+    font-size: 12px;
+    padding: 15px 10px;
+  }
+  
+  .footer-copyright {
+    font-size: 12px;
+    padding: 15px 10px;
+  }
+}
