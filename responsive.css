@@ -8,8 +8,7 @@ body {
 /* Dashboard-specific body style */
 .dashboard-body {
   display: block;
-  padding-top: 80px;
-  background: #f9fafc;
+  padding-top: 80px; /* Ensures padding-top is present */
 }
 
 /* Container adjustments */
@@ -152,9 +151,7 @@ body {
   }
   
   /* Specific adjustments for index.php on mobile */
-  body[style] {
-    padding-top: 120px !important; /* Override inline style for better mobile spacing */
-  }
+  /* Removed obsolete body[style] rule that targeted previously removed inline styles */
   
   .header {
     display: flex;
@@ -266,7 +263,7 @@ body {
   
   /* Dashboard adjustments for mobile */
   .dashboard {
-    padding-top: 140px;
+    padding-top: 75px; /* Adjusted from 140px to match header height (~60px) + buffer */
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -330,6 +327,12 @@ body {
   h2 {
     font-size: 20px;
   }
+
+  /* Announcement text adjustments for mobile */
+  .announcement-text {
+    white-space: normal !important; /* Allow text to wrap */
+    animation: none !important; /* Disable sliding animation */
+  }
   
   /* Footer adjustments */
   div[style="text-align: center; padding: 20px; color: #777; margin-top: 20px;"] {
@@ -340,5 +343,77 @@ body {
   .footer-copyright {
     font-size: 12px;
     padding: 15px 10px;
+  }
+}
+
+/* Responsive adjustments for settings.php styles */
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 20px;
+    margin: 20px auto; /* Consistent with .container */
+  }
+
+  .tabs {
+    /* Could make tabs scrollable on slightly larger screens if preferred */
+    /* overflow-x: auto; white-space: nowrap; padding-bottom: 5px; */
+  }
+}
+
+@media (max-width: 600px) { /* Breakpoint for tabs and form-rows */
+  .tabs {
+    flex-direction: column;
+    align-items: stretch; /* Make tabs take full width */
+    gap: 0; /* Remove gap, use margin on .tab instead */
+  }
+
+  .tab {
+    width: 100%;
+    margin-bottom: 5px; /* Space between stacked tabs */
+    text-align: left; /* Align text to left for stacked tabs */
+  }
+  .tab:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0; /* Remove gap, rely on form-group margin */
+  }
+
+  .form-row .form-group {
+    margin-bottom: 15px; /* Add back margin for stacked items */
+  }
+  .form-row .form-group:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-container {
+    padding: 15px;
+    margin: 10px auto; /* Consistent with .container */
+  }
+
+  .settings-container .card-header i { /* Adjusted from .card-header i */
+    padding: 10px;
+    font-size: 20px;
+  }
+  
+  .settings-container .card-header h2 { /* Adjusted from .card-header h2 */
+      font-size: 18px; /* Match other h2s on mobile */
+  }
+
+  .modal {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    flex-direction: column; /* Stack buttons */
+    gap: 10px;
+  }
+
+  .modal-footer .btn {
+    width: 100%; /* Make modal buttons full width */
+    margin-left: 0; /* Reset any margin if present */
   }
 }

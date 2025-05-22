@@ -190,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ตั้งค่าบัญชี - VIP VPN</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
         .settings-container {
@@ -414,10 +415,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .btn-cancel:hover {
             background: #e0e0e0;
-        }
-    </style>
 </head>
-<body style="display: block; padding-top: 80px; background: #f9fafc;">
+<body class="dashboard-body">
     <div class="header">
         <div class="header-logo">
             <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo">
