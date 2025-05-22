@@ -150,9 +150,9 @@ $db->close();
                 <div style="font-weight: 600; font-size: 18px; margin-bottom: 5px; text-align: center;">เซิร์ฟเวอร์ไทย</div>
                 <div style="color: var(--success-color); font-weight: 500; margin-bottom: 10px;">ออนไลน์</div>
                 <div style="color: #777; font-size: 14px; margin-bottom: 15px; text-align: center;">Ping: 15ms | โหลด: 45%</div>
-                <button class="btn" style="width: 200px; max-width: 100%;">
-                    <i class="fas fa-plug"></i> เชื่อมต่อ
-                </button>
+                <a href="save_vless.php" class="btn" style="width: 200px; max-width: 100%; display: inline-block; text-decoration: none;">
+                    <i class="fas fa-plus-circle"></i> สร้างโค้ด VPN
+                </a>
             </div>
         </div>
     </div>
