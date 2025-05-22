@@ -51,240 +51,226 @@ $db->close();
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ประวัติโค้ด VPN - VIP VPN</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="responsive.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <style>
-        .history-container {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        /* Custom glassmorphism effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        .history-item {
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
+
+        /* Space-themed background */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #0d1b2a, #1b263b, #3c096c);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
         }
+
+        /* Gradient animation */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Button hover animation */
+        .btn-primary:hover, .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        /* History item hover animation */
         .history-item:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transform: translateY(-4px);
+            border-color: #22d3ee;
         }
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+
+        /* Fade-in animation for history items */
+        .history-item {
+            animation: fadeIn 0.5s ease-in-out;
         }
-        .history-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .badge-active {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        .badge-expired {
-            background: #ffebee;
-            color: #c62828;
-        }
-        .code-box {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: monospace;
-            word-break: break-all;
-            margin: 10px 0;
-            position: relative;
-        }
-        .copy-btn {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            background: white;
-            border: 1px solid #ddd;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-        .copy-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        .package-badge {
-            background: #e3f2fd;
-            color: #1565c0;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-right: 10px;
-        }
-        .stats-row {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            color: #666;
-            font-size: 14px;
-        }
-        .no-history {
-            text-align: center;
-            padding: 50px 20px;
-            color: #666;
-        }
-        .no-history i {
-            font-size: 48px;
-            color: #ddd;
-            margin-bottom: 20px;
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .logo {
+                height: 2.5rem;
+            }
+            .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body class="dashboard-body" style="display: block; padding-top: 80px; background: #f9fafc;">
-    <div class="header">
-        <div class="header-logo">
-            <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo">
-            <h1>VIP VPN</h1>
-        </div>
-        <div class="user-menu">
-            <span class="user-info">
-                <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($username); ?>
-            </span>
-            <div class="user-dropdown">
-                <div class="dropdown-header">บัญชีผู้ใช้</div>
-                <div class="dropdown-item credit">
-                    <i class="fas fa-coins"></i> เครดิต
-                    <span class="credit-amount"><?php echo htmlspecialchars($credits); ?></span>
+<body class="relative min-h-screen">
+    <div id="particles-js"></div>
+    <header class="fixed top-0 left-0 w-full bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg z-20">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo" class="logo h-10">
+                <h1 class="text-xl font-bold text-white">VIP VPN</h1>
+            </div>
+            <div class="relative user-menu">
+                <button class="flex items-center space-x-2 text-gray-200 hover:text-white">
+                    <i class="fas fa-user-circle"></i>
+                    <span><?php echo htmlspecialchars($username); ?></span>
+                </button>
+                <div class="user-dropdown hidden absolute right-0 mt-2 w-64 bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg z-10">
+                    <div class="px-4 py-2 text-sm font-semibold text-gray-200 border-b border-gray-600">บัญชีผู้ใช้</div>
+                    <div class="px-4 py-2 text-sm text-gray-200">
+                        <i class="fas fa-coins mr-2"></i>เครดิต: <span class="font-semibold"><?php echo htmlspecialchars($credits); ?></span>
+                    </div>
+                    <a href="topup.php" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:bg-opacity-20">
+                        <i class="fas fa-plus-circle mr-2"></i>เติมเงิน
+                    </a>
+                    <a href="settings.php" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:bg-opacity-20">
+                        <i class="fas fa-cog mr-2"></i>ตั้งค่าบัญชี
+                    </a>
+                    <a href="logout.php" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:bg-opacity-20">
+                        <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                    </a>
                 </div>
-                <a href="topup.php" class="dropdown-item">
-                    <i class="fas fa-plus-circle"></i> เติมเงิน
-                </a>
-                <a href="settings.php" class="dropdown-item">
-                    <i class="fas fa-cog"></i> ตั้งค่าบัญชี
-                </a>
-                <a href="logout.php" class="dropdown-item">
-                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
-                </a>
             </div>
         </div>
-    </div>
+    </header>
 
-    <div class="history-container">
-        <h2><i class="fas fa-history"></i> ประวัติการสร้างโค้ด VPN</h2>
-        
-        <?php if (count($history) > 0): ?>
-            <?php foreach ($history as $item): ?>
-                <?php 
-                    $isExpired = time() > $item['expiry_time'];
-                    $expiryDate = date('Y-m-d H:i:s', $item['expiry_time']);
-                    $packageName = match($item['profile_key']) {
-                        'true_dtac_nopro' => 'True/Dtac ไม่จำกัด',
-                        'true_zoom' => 'True Zoom/Work',
-                        'ais' => 'AIS ไม่จำกัด',
-                        'true_pro_facebook' => 'True Pro Facebook',
-                        default => $item['profile_key']
-                    };
-                ?>
-                <div class="history-item">
-                    <div class="history-header">
-                        <div>
-                            <span class="package-badge">
-                                <?php echo htmlspecialchars($packageName); ?>
+    <main class="container mx-auto px-4 pt-24 pb-8 z-10">
+        <div class="glass-card rounded-2xl p-8 max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-6"><i class="fas fa-history mr-2"></i>ประวัติการสร้างโค้ด VPN</h2>
+
+            <?php if (count($history) > 0): ?>
+                <?php foreach ($history as $item): ?>
+                    <?php 
+                        $isExpired = time() > $item['expiry_time'];
+                        $expiryDate = date('Y-m-d H:i:s', $item['expiry_time']);
+                        $packageName = match($item['profile_key']) {
+                            'true_dtac_nopro' => 'True/Dtac ไม่จำกัด',
+                            'true_zoom' => 'True Zoom/Work',
+                            'ais' => 'AIS ไม่จำกัด',
+                            'true_pro_facebook' => 'True Pro Facebook',
+                            default => $item['profile_key']
+                        };
+                    ?>
+                    <div class="history-item glass-card p-6 mb-4 rounded-lg border border-transparent transition duration-200" id="item-<?php echo $item['id']; ?>">
+                        <div class="history-header flex flex-wrap justify-between items-center mb-4 gap-4">
+                            <div class="flex items-center flex-wrap gap-2">
+                                <span class="package-badge bg-cyan-500 bg-opacity-20 text-cyan-300 px-2 py-1 rounded-full text-sm font-semibold"><?php echo htmlspecialchars($packageName); ?></span>
+                                <strong class="text-lg text-white"><?php echo htmlspecialchars($item['code_name']); ?></strong>
+                            </div>
+                            <span class="history-badge px-2 py-1 rounded-full text-sm font-semibold <?php echo $isExpired ? 'bg-red-500 bg-opacity-20 text-red-300' : 'bg-green-500 bg-opacity-20 text-green-300'; ?>">
+                                <i class="fas fa-<?php echo $isExpired ? 'times-circle' : 'check-circle'; ?> mr-1"></i>
+                                <?php echo $isExpired ? 'หมดอายุ' : 'ใช้งานได้'; ?>
                             </span>
-                            <strong><?php echo htmlspecialchars($item['code_name']); ?></strong>
                         </div>
-                        <span class="history-badge <?php echo $isExpired ? 'badge-expired' : 'badge-active'; ?>">
-                            <?php echo $isExpired ? 'หมดอายุ' : 'ใช้งานได้'; ?>
-                        </span>
-                    </div>
-                    
-                    <div class="code-box">
-                        <?php echo htmlspecialchars($item['vless_code']); ?>
-                        <button class="copy-btn" onclick="copyToClipboard(this, '<?php echo htmlspecialchars($item['vless_code']); ?>')">
-                            <i class="fas fa-copy"></i> คัดลอก
-                        </button>
-                    </div>
-                    
-                    <div class="stats-row">
-                        <div>
-                            <i class="fas fa-clock"></i> สร้างเมื่อ: <?php echo htmlspecialchars($item['created_at']); ?>
+                        <div class="relative bg-white bg-opacity-10 p-4 rounded-lg mb-4">
+                            <code class="vless-code text-gray-200 text-sm break-all"><?php echo htmlspecialchars($item['vless_code']); ?></code>
+                            <button class="copy-btn absolute top-2 right-2 bg-white bg-opacity-20 text-gray-200 px-3 py-1 rounded-lg hover:bg-opacity-30 transition duration-200" onclick="copyToClipboard(this, '<?php echo htmlspecialchars($item['vless_code']); ?>')">
+                                <i class="fas fa-copy mr-1"></i>คัดลอก
+                            </button>
                         </div>
-                        <div>
-                            <i class="fas fa-calendar"></i> หมดอายุ: <?php echo htmlspecialchars($expiryDate); ?>
-                        </div>
-                        <div>
-                            <i class="fas fa-database"></i> 
-                            ข้อมูล: <?php echo $item['gb_limit'] > 0 ? htmlspecialchars($item['gb_limit']) . ' GB' : 'ไม่จำกัด'; ?>
-                        </div>
-                        <div>
-                            <i class="fas fa-network-wired"></i> 
-                            อุปกรณ์: <?php echo htmlspecialchars($item['ip_limit']); ?> เครื่อง
+                        <div class="stats-row grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-gray-300 text-sm">
+                            <div class="flex items-center bg-white bg-opacity-10 p-2 rounded-lg">
+                                <i class="fas fa-clock mr-2 text-cyan-300"></i> สร้างเมื่อ: <?php echo htmlspecialchars($item['created_at']); ?>
+                            </div>
+                            <div class="flex items-center bg-white bg-opacity-10 p-2 rounded-lg">
+                                <i class="fas fa-calendar mr-2 text-cyan-300"></i> หมดอายุ: <?php echo htmlspecialchars($expiryDate); ?>
+                            </div>
+                            <div class="flex items-center bg-white bg-opacity-10 p-2 rounded-lg">
+                                <i class="fas fa-database mr-2 text-cyan-300"></i> 
+                                <?php echo $item['gb_limit'] > 0 ? htmlspecialchars($item['gb_limit']) . ' GB' : 'ไม่จำกัด'; ?>
+                            </div>
+                            <div class="flex items-center bg-white bg-opacity-10 p-2 rounded-lg">
+                                <i class="fas fa-network-wired mr-2 text-cyan-300"></i> 
+                                <?php echo htmlspecialchars($item['ip_limit']); ?> เครื่อง
+                            </div>
                         </div>
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="glass-card p-8 text-center rounded-lg">
+                    <i class="fas fa-history text-5xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-300 text-lg mb-4">ยังไม่มีประวัติการสร้างโค้ด VPN</p>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="no-history">
-                <i class="fas fa-history"></i>
-                <p>ยังไม่มีประวัติการสร้างโค้ด VPN</p>
-                <a href="save_vless.php" class="btn">
-                    <i class="fas fa-plus-circle"></i> สร้างโค้ด VPN ใหม่
+            <?php endif; ?>
+
+            <div class="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
+                <a href="save_vless.php" class="btn-primary w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-plus-circle mr-2"></i>สร้างโค้ด VPN ใหม่
+                </a>
+                <a href="index.php" class="btn-secondary w-full sm:w-auto bg-gray-600 bg-opacity-20 text-gray-200 py-3 px-6 rounded-lg hover:bg-opacity-30 transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าหลัก
                 </a>
             </div>
-        <?php endif; ?>
-
-        <div style="margin-top: 20px; text-align: center;">
-            <a href="save_vless.php" class="btn">
-                <i class="fas fa-plus-circle"></i> สร้างโค้ด VPN ใหม่
-            </a>
-            <a href="index.php" class="btn" style="background: #6c757d;">
-                <i class="fas fa-arrow-left"></i> กลับไปหน้าหลัก
-            </a>
         </div>
-    </div>
+    </main>
 
     <script>
+        // Initialize Particles.js
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 100, density: { enable: true, value_area: 800 } },
+                color: { value: ['#ffffff', '#a5b4fc', '#f0abfc'] },
+                shape: { type: 'circle' },
+                opacity: { value: 0.6, random: true },
+                size: { value: 2, random: true },
+                line_linked: { enable: false },
+                move: { enable: true, speed: 1, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                modes: { repulse: { distance: 100 }, push: { particles_nb: 4 } }
+            },
+            retina_detect: true
+        });
+
+        // Copy to clipboard function
         function copyToClipboard(button, text) {
             navigator.clipboard.writeText(text).then(() => {
                 const originalText = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check"></i> คัดลอกแล้ว';
-                button.style.background = '#4caf50';
-                button.style.color = 'white';
-                button.style.borderColor = '#4caf50';
-                
+                button.innerHTML = '<i class="fas fa-check mr-1"></i>คัดลอกแล้ว';
+                button.classList.add('bg-green-500', 'bg-opacity-30');
                 setTimeout(() => {
                     button.innerHTML = originalText;
-                    button.style.background = 'white';
-                    button.style.color = 'inherit';
-                    button.style.borderColor = '#ddd';
+                    button.classList.remove('bg-green-500', 'bg-opacity-30');
                 }, 2000);
             });
         }
 
-        // User menu dropdown
+        // User menu toggle
         document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.querySelector('.user-info');
-            const menuDropdown = document.querySelector('.user-dropdown');
-            
-            if (menuToggle && menuDropdown) {
-                menuToggle.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu) {
+                userMenu.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    menuDropdown.classList.toggle('show');
+                    const dropdown = this.querySelector('.user-dropdown');
+                    dropdown.classList.toggle('hidden');
                 });
 
                 document.addEventListener('click', function(e) {
-                    if (!menuDropdown.contains(e.target) && !menuToggle.contains(e.target)) {
-                        menuDropdown.classList.remove('show');
+                    const dropdown = userMenu.querySelector('.user-dropdown');
+                    if (!userMenu.contains(e.target)) {
+                        dropdown.classList.add('hidden');
                     }
                 });
             }

@@ -187,170 +187,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ตั้งค่าบัญชี - VIP VPN</title>
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <style>
-        .settings-container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        /* Custom glassmorphism effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 15px;
+
+        /* Space-themed background */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #0d1b2a, #1b263b, #3c096c);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
         }
-        
-        .tab {
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s;
-            background: #f5f7ff;
-            color: var(--dark-color);
+
+        /* Gradient animation */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        
-        .tab.active {
-            background: var(--primary-gradient);
-            color: white;
-            box-shadow: 0 5px 15px rgba(71, 118, 230, 0.2);
+
+        /* Input focus animation */
+        input:focus {
+            transform: scale(1.02);
+            transition: transform 0.2s ease-in-out;
         }
-        
-        .tab-content {
-            display: none;
+
+        /* Button hover animation */
+        button:hover, .btn-primary:hover, .btn-danger:hover, .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease-out;
+
+        /* Fade-in animation for messages and sections */
+        .error-message, .success-message, .section {
+            animation: fadeIn 0.5s ease-in-out;
         }
-        
-        .form-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-        
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            color: var(--dark-color);
-            text-decoration: none;
-            margin-bottom: 20px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .back-link:hover {
-            color: var(--primary-color);
-        }
-        
-        .back-link i {
-            margin-right: 8px;
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #777;
-            cursor: pointer;
-        }
-        
-        .card-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-        
-        .card-header i {
-            font-size: 24px;
-            background: var(--primary-gradient);
-            color: white;
-            padding: 12px;
-            border-radius: 12px;
-            margin-right: 15px;
-        }
-        
-        .card-header h2 {
-            margin: 0;
-            text-align: left;
-        }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .warning-box {
-            background-color: rgba(255, 187, 0, 0.1);
-            border-left: 4px solid #ffbb00;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-            display: flex;
-            align-items: flex-start;
-        }
-        
-        .warning-box i {
-            font-size: 24px;
-            color: #ffbb00;
-            margin-right: 15px;
-            margin-top: 3px;
-        }
-        
-        .warning-box h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            color: #e65100;
-        }
-        
-        .warning-box p {
-            margin: 0;
-            color: #555;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff5252, #d32f2f);
-        }
-        
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #d32f2f, #b71c1c);
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-        }
-        
+
+        /* Modal styling */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -359,291 +259,250 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             visibility: hidden;
             transition: all 0.3s;
         }
-        
+
         .modal-overlay.active {
             opacity: 1;
             visibility: visible;
         }
-        
+
         .modal {
-            background: white;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 30px;
             width: 90%;
             max-width: 500px;
             transform: translateY(-20px);
             transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
-        
+
         .modal-overlay.active .modal {
             transform: translateY(0);
         }
-        
-        .modal-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header i {
-            font-size: 24px;
-            color: #d32f2f;
-            margin-right: 15px;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-        
-        .modal-body {
-            margin-bottom: 25px;
-        }
-        
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .btn-cancel {
-            background: #f5f5f5;
-            color: #333;
-        }
-        
-        .btn-cancel:hover {
-            background: #e0e0e0;
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .logo {
+                height: 2.5rem;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .modal-footer {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
-<body style="display: block; padding-top: 80px; background: #f9fafc;">
-    <div class="header">
-        <div class="header-logo">
-            <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo">
-            <h1>VIP VPN</h1>
-        </div>
-        <div class="user-menu">
-            <span class="user-info">
-                <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($username); ?>
-            </span>
-            <div class="user-dropdown">
-                <div class="dropdown-header">บัญชีผู้ใช้</div>
-                <div class="dropdown-item user-profile">
-                    <i class="fas fa-user"></i> <?php echo htmlspecialchars($username); ?>
+<body class="relative min-h-screen">
+    <div id="particles-js"></div>
+    <header class="fixed top-0 left-0 w-full bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg z-20">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo" class="logo h-10">
+                <h1 class="text-xl font-bold text-white">VIP VPN</h1>
+            </div>
+            <div class="relative user-menu">
+                <button class="flex items-center space-x-2 text-gray-200 hover:text-white">
+                    <i class="fas fa-user-circle"></i>
+                    <span><?php echo htmlspecialchars($username); ?></span>
+                </button>
+                <div class="user-dropdown hidden absolute right-0 mt-2 w-64 bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg z-10">
+                    <div class="px-4 py-2 text-sm font-semibold text-gray-200 border-b border-gray-600">บัญชีผู้ใช้</div>
+                    <div class="px-4 py-2 text-sm text-gray-200">
+                        <i class="fas fa-user mr-2"></i><?php echo htmlspecialchars($username); ?>
+                    </div>
+                    <div class="px-4 py-2 text-sm text-gray-200">
+                        <i class="fas fa-coins mr-2"></i>เครดิต: <span class="font-semibold"><?php echo htmlspecialchars($credits); ?></span>
+                    </div>
+                    <a href="settings.php" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:bg-opacity-20">
+                        <i class="fas fa-cog mr-2"></i>ตั้งค่าบัญชี
+                    </a>
+                    <a href="logout.php" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 hover:bg-opacity-20">
+                        <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                    </a>
                 </div>
-                <div class="dropdown-item credit">
-                    <i class="fas fa-coins"></i> เครดิต
-                    <span class="credit-amount"><?php echo htmlspecialchars($credits); ?></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 pt-24 pb-8 z-10">
+        <div class="glass-card rounded-2xl p-8 max-w-3xl mx-auto">
+            <a href="index.php" class="inline-flex items-center text-gray-200 hover:text-cyan-300 mb-6 transition duration-200">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปยังแดชบอร์ด
+            </a>
+
+            <?php if (!empty($error_message)): ?>
+                <div class="error-message bg-red-500 bg-opacity-30 text-red-200 p-4 rounded-lg mb-6 flex items-center border border-red-400">
+                    <i class="fas fa-exclamation-circle mr-2"></i><?php echo htmlspecialchars($error_message); ?>
                 </div>
-                <a href="settings.php" class="dropdown-item">
-                    <i class="fas fa-cog"></i> ตั้งค่าบัญชี
-                </a>
-                <a href="logout.php" class="dropdown-item">
-                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="settings-container">
-        <a href="index.php" class="back-link">
-            <i class="fas fa-arrow-left"></i> กลับไปยังแดชบอร์ด
-        </a>
-        
-        <?php if (!empty($error_message)): ?>
-            <div class="message error-message">
-                <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($error_message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (!empty($success_message)): ?>
-            <div class="message success-message">
-                <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($success_message); ?>
-            </div>
-        <?php endif; ?>
-        
-        <div class="tabs">
-            <div class="tab active" data-tab="profile">
-                <i class="fas fa-user"></i> ข้อมูลบัญชี
-            </div>
-            <div class="tab" data-tab="password">
-                <i class="fas fa-lock"></i> เปลี่ยนรหัสผ่าน
-            </div>
-            <div class="tab" data-tab="delete">
-                <i class="fas fa-user-times"></i> ลบบัญชี
-            </div>
-        </div>
-        
-        <div class="tab-content active" id="profile-tab">
-            <div class="card-header">
-                <i class="fas fa-user-edit"></i>
-                <h2>แก้ไขข้อมูลบัญชี</h2>
-            </div>
-            
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-                <div class="form-row">
+            <?php endif; ?>
+
+            <?php if (!empty($success_message)): ?>
+                <div class="success-message bg-green-500 bg-opacity-30 text-green-200 p-4 rounded-lg mb-6 flex items-center border border-green-400">
+                    <i class="fas fa-check-circle mr-2"></i><?php echo htmlspecialchars($success_message); ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Edit Profile Section -->
+            <div class="section mb-12">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-user-edit text-2xl text-white bg-gradient-to-r from-cyan-500 to-purple-600 p-3 rounded-lg mr-3"></i>
+                    <h2 class="text-xl font-bold text-white">แก้ไขข้อมูลบัญชี</h2>
+                </div>
+                <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="space-y-6">
+                    <div class="form-row flex flex-wrap gap-4">
+                        <div class="form-group flex-1">
+                            <label for="username" class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-user mr-2"></i>ชื่อผู้ใช้</label>
+                            <input type="text" id="username" name="username" placeholder="ชื่อผู้ใช้" value="<?php echo htmlspecialchars($username); ?>" required class="w-full bg-white bg-opacity-10 border border-gray-300 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-cyan-400 focus:border-cyan-400 transition duration-200">
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label for="username"><i class="fas fa-user"></i> ชื่อผู้ใช้</label>
-                        <input type="text" id="username" name="username" placeholder="ชื่อผู้ใช้" value="<?php echo htmlspecialchars($username); ?>" required>
+                        <label for="email" class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-envelope mr-2"></i>อีเมล</label>
+                        <input type="email" id="email" name="email" placeholder="อีเมล" value="<?php echo htmlspecialchars($email); ?>" required class="w-full bg-white bg-opacity-10 border border-gray-300 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-cyan-400 focus:border-cyan-400 transition duration-200">
+                    </div>
+                    <button type="submit" name="update_profile" class="btn-primary w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>บันทึกการเปลี่ยนแปลง
+                    </button>
+                </form>
+            </div>
+
+            <!-- Change Password Section -->
+            <div class="section mb-12">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-key text-2xl text-white bg-gradient-to-r from-cyan-500 to-purple-600 p-3 rounded-lg mr-3"></i>
+                    <h2 class="text-xl font-bold text-white">เปลี่ยนรหัสผ่าน</h2>
+                </div>
+                <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="space-y-6">
+                    <div class="form-group relative">
+                        <label for="current_password" class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-lock mr-2"></i>รหัสผ่านปัจจุบัน</label>
+                        <input type="password" id="current_password" name="current_password" placeholder="รหัสผ่านปัจจุบัน" required class="w-full bg-white bg-opacity-10 border border-gray-300 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-cyan-400 focus:border-cyan-400 transition duration-200">
+                        <span class="password-toggle absolute right-3 top-12 cursor-pointer text-gray-400" onclick="togglePassword('current_password')">
+                            <i id="current_password-toggle-icon" class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="form-group relative">
+                        <label for="new_password" class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-lock mr-2"></i>รหัสผ่านใหม่</label>
+                        <input type="password" id="new_password" name="new_password" placeholder="รหัสผ่านใหม่" required class="w-full bg-white bg-opacity-10 border border-gray-300 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-cyan-400 focus:border-cyan-400 transition duration-200">
+                        <span class="password-toggle absolute right-3 top-12 cursor-pointer text-gray-400" onclick="togglePassword('new_password')">
+                            <i id="new_password-toggle-icon" class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="form-group relative">
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-lock mr-2"></i>ยืนยันรหัสผ่านใหม่</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="ยืนยันรหัสผ่านใหม่" required class="w-full bg-white bg-opacity-10 border border-gray-300 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-cyan-400 focus:border-cyan-400 transition duration-200">
+                        <span class="password-toggle absolute right-3 top-12 cursor-pointer text-gray-400" onclick="togglePassword('confirm_password')">
+                            <i id="confirm_password-toggle-icon" class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <button type="submit" name="change_password" class="btn-primary w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-key mr-2"></i>เปลี่ยนรหัสผ่าน
+                    </button>
+                </form>
+            </div>
+
+            <!-- Delete Account Section -->
+            <div class="section">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-user-times text-2xl text-white bg-gradient-to-r from-red-500 to-red-700 p-3 rounded-lg mr-3"></i>
+                    <h2 class="text-xl font-bold text-white">ลบบัญชี</h2>
+                </div>
+                <div class="bg-yellow-500 bg-opacity-20 border-l-4 border-yellow-500 p-4 rounded-lg mb-6 flex items-start">
+                    <i class="fas fa-exclamation-triangle text-2xl text-yellow-300 mr-3"></i>
+                    <div>
+                        <h3 class="text-lg font-semibold text-yellow-300 mb-2">คำเตือน! การดำเนินการนี้ไม่สามารถกู้คืนได้</h3>
+                        <p class="text-gray-300">การลบบัญชีของคุณจะเป็นการลบข้อมูลทั้งหมดอย่างถาวร รวมถึงประวัติการใช้งาน เครดิต และข้อมูลส่วนตัว กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ</p>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="email"><i class="fas fa-envelope"></i> อีเมล</label>
-                    <input type="email" id="email" name="email" placeholder="อีเมล" value="<?php echo htmlspecialchars($email); ?>" required>
-                </div>
-                
-                <button type="submit" name="update_profile" class="btn">
-                    <i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง
-                </button>
-            </form>
-        </div>
-        
-        <div class="tab-content" id="password-tab">
-            <div class="card-header">
-                <i class="fas fa-key"></i>
-                <h2>เปลี่ยนรหัสผ่าน</h2>
+                <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" class="space-y-6">
+                    <div class="form-group relative">
+                        <label for="delete_password" class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-lock mr-2"></i>รหัสผ่านปัจจุบัน (เพื่อยืนยันตัวตน)</label>
+                        <input type="password" id="delete_password" name="delete_password" placeholder="กรุณาป้อนรหัสผ่านปัจจุบันเพื่อยืนยันการลบบัญชี" required class="w-full bg-white bg-opacity-10 border border-gray-300 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-red-400 focus:border-red-400 transition duration-200">
+                        <span class="password-toggle absolute right-3 top-12 cursor-pointer text-gray-400" onclick="togglePassword('delete_password')">
+                            <i id="delete_password-toggle-icon" class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="checkbox-group flex items-center text-gray-200">
+                        <input type="checkbox" id="confirm_delete" name="confirm_delete" required class="w-5 h-5 text-cyan-400 border-gray-300 rounded focus:ring-cyan-400">
+                        <label for="confirm_delete" class="ml-2">ฉันเข้าใจว่าการกระทำนี้จะลบบัญชีของฉันอย่างถาวรและไม่สามารถกู้คืนได้</label>
+                    </div>
+                    <button type="button" id="delete_account_btn" class="btn-danger w-full bg-gradient-to-r from-red-500 to-red-700 text-white py-3 rounded-lg hover:from-red-600 hover:to-red-800 transition duration-200 flex items-center justify-center" onclick="showDeleteConfirmModal()">
+                        <i class="fas fa-user-times mr-2"></i>ลบบัญชีของฉัน
+                    </button>
+                    <button type="submit" id="confirm_delete_submit" name="delete_account" style="display: none;"></button>
+                </form>
             </div>
-            
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-                <div class="form-group">
-                    <label for="current_password"><i class="fas fa-lock"></i> รหัสผ่านปัจจุบัน</label>
-                    <input type="password" id="current_password" name="current_password" placeholder="รหัสผ่านปัจจุบัน" required>
-                    <span class="password-toggle" onclick="togglePassword('current_password')">
-                        <i id="current_password-toggle-icon" class="fas fa-eye"></i>
-                    </span>
-                </div>
-                
-                <div class="form-group">
-                    <label for="new_password"><i class="fas fa-lock"></i> รหัสผ่านใหม่</label>
-                    <input type="password" id="new_password" name="new_password" placeholder="รหัสผ่านใหม่" required>
-                    <span class="password-toggle" onclick="togglePassword('new_password')">
-                        <i id="new_password-toggle-icon" class="fas fa-eye"></i>
-                    </span>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm_password"><i class="fas fa-lock"></i> ยืนยันรหัสผ่านใหม่</label>
-                    <input type="password" id="confirm_password" name="confirm_password" placeholder="ยืนยันรหัสผ่านใหม่" required>
-                    <span class="password-toggle" onclick="togglePassword('confirm_password')">
-                        <i id="confirm_password-toggle-icon" class="fas fa-eye"></i>
-                    </span>
-                </div>
-                
-                <button type="submit" name="change_password" class="btn">
-                    <i class="fas fa-key"></i> เปลี่ยนรหัสผ่าน
-                </button>
-            </form>
         </div>
-        
-        <div class="tab-content" id="delete-tab">
-            <div class="card-header">
-                <i class="fas fa-user-times"></i>
-                <h2>ลบบัญชี</h2>
-            </div>
-            
-            <div class="warning-box">
-                <i class="fas fa-exclamation-triangle"></i>
-                <div>
-                    <h3>คำเตือน! การดำเนินการนี้ไม่สามารถกู้คืนได้</h3>
-                    <p>การลบบัญชีของคุณจะเป็นการลบข้อมูลทั้งหมดอย่างถาวร รวมถึงประวัติการใช้งาน เครดิต และข้อมูลส่วนตัว กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ</p>
-                </div>
-            </div>
-            
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-                <div class="form-group">
-                    <label for="delete_password"><i class="fas fa-lock"></i> รหัสผ่านปัจจุบัน (เพื่อยืนยันตัวตน)</label>
-                    <input type="password" id="delete_password" name="delete_password" placeholder="กรุณาป้อนรหัสผ่านปัจจุบันเพื่อยืนยันการลบบัญชี" required>
-                    <span class="password-toggle" onclick="togglePassword('delete_password')">
-                        <i id="delete_password-toggle-icon" class="fas fa-eye"></i>
-                    </span>
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="confirm_delete" name="confirm_delete" required>
-                    <label for="confirm_delete">ฉันเข้าใจว่าการกระทำนี้จะลบบัญชีของฉันอย่างถาวรและไม่สามารถกู้คืนได้</label>
-                </div>
-                
-                <button type="button" id="delete_account_btn" class="btn btn-danger" onclick="showDeleteConfirmModal()">
-                    <i class="fas fa-user-times"></i> ลบบัญชีของฉัน
-                </button>
-                
-                <!-- Hidden submit button that will be triggered by the confirmation modal -->
-                <button type="submit" id="confirm_delete_submit" name="delete_account" style="display: none;"></button>
-            </form>
-        </div>
-    </div>
-    
-    <div style="text-align: center; padding: 20px; color: #777; margin-top: 20px;">
-        &copy; 2025 VIP VPN Thailand. All rights reserved.
-    </div>
-    
-    <!-- Delete Account Confirmation Modal -->
+        <div class="text-center text-gray-400 mt-6">© 2025 VIP VPN Thailand. All rights reserved.</div>
+    </main>
+
     <div class="modal-overlay" id="delete-confirm-modal">
         <div class="modal">
-            <div class="modal-header">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>ยืนยันการลบบัญชี</h3>
+            <div class="modal-header flex items-center mb-4">
+                <i class="fas fa-exclamation-triangle text-2xl text-red-300 mr-3"></i>
+                <h3 class="text-lg font-semibold text-white">ยืนยันการลบบัญชี</h3>
             </div>
-            <div class="modal-body">
+            <div class="modal-body mb-6 text-gray-200">
                 <p>คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีของคุณ?</p>
                 <p><b>คำเตือน:</b> การดำเนินการนี้ไม่สามารถเปลี่ยนแปลงได้ และข้อมูลทั้งหมดของคุณจะถูกลบถาวร</p>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancel" onclick="hideDeleteConfirmModal()">ยกเลิก</button>
-                <button class="btn btn-danger" onclick="confirmDelete()">ลบบัญชีถาวร</button>
+            <div class="modal-footer flex justify-end gap-4">
+                <button class="btn-cancel bg-gray-600 bg-opacity-20 text-gray-200 px-4 py-2 rounded-lg hover:bg-opacity-30 transition duration-200" onclick="hideDeleteConfirmModal()">ยกเลิก</button>
+                <button class="btn-danger bg-gradient-to-r from-red-500 to-red-700 text-white px-4 py-2 rounded-lg hover:from-red-600 hover:to-red-800 transition duration-200" onclick="confirmDelete()">ลบบัญชีถาวร</button>
             </div>
         </div>
     </div>
-    
+
     <script>
+        // Initialize Particles.js
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 100, density: { enable: true, value_area: 800 } },
+                color: { value: ['#ffffff', '#a5b4fc', '#f0abfc'] },
+                shape: { type: 'circle' },
+                opacity: { value: 0.6, random: true },
+                size: { value: 2, random: true },
+                line_linked: { enable: false },
+                move: { enable: true, speed: 1, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                modes: { repulse: { distance: 100 }, push: { particles_nb: 4 } }
+            },
+            retina_detect: true
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Tab switching functionality
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    
-                    // Update active tab
-                    tabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === tabName + '-tab') {
-                            content.classList.add('active');
-                        }
-                    });
-                });
-            });
-            
             // User menu functionality
             const userMenu = document.querySelector('.user-menu');
             if (userMenu) {
                 userMenu.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    this.classList.toggle('active');
+                    const dropdown = this.querySelector('.user-dropdown');
+                    dropdown.classList.toggle('hidden');
                 });
                 
-                // Close menu when clicking elsewhere
-                document.addEventListener('click', function() {
-                    userMenu.classList.remove('active');
+                document.addEventListener('click', function(e) {
+                    const dropdown = userMenu.querySelector('.user-dropdown');
+                    if (!userMenu.contains(e.target)) {
+                        dropdown.classList.add('hidden');
+                    }
                 });
             }
-            
-            // Check if there's a url parameter for tab and activate that tab
-            const urlParams = new URLSearchParams(window.location.search);
-            const activeTab = urlParams.get('tab');
-            
-            if (activeTab) {
-                const tabToActivate = document.querySelector(`.tab[data-tab="${activeTab}"]`);
-                if (tabToActivate) {
-                    tabToActivate.click();
-                }
+
+            // Auto-hide messages
+            const messageDiv = document.querySelector('.message');
+            if (messageDiv) {
+                setTimeout(() => {
+                    messageDiv.style.transition = 'opacity 0.5s';
+                    messageDiv.style.opacity = '0';
+                    setTimeout(() => messageDiv.remove(), 500);
+                }, 5000);
             }
         });
         
