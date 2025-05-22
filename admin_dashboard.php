@@ -287,6 +287,9 @@ try {
                 <a href="admin_dashboard.php" class="dropdown-item">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
+                <a href="server_management.php" class="dropdown-item">
+                    <i class="fas fa-server"></i> Server Management
+                </a>
                 <a href="logout.php" class="dropdown-item">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
