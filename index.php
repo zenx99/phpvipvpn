@@ -64,7 +64,7 @@ $db->close();
     <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
-<body class="dashboard-body" style="display: block; padding-top: 80px; background: #f9fafc;">
+<body class="dashboard-body">
     <div class="header">
         <div class="header-logo">
             <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo">
@@ -150,14 +150,14 @@ $db->close();
                 <div style="font-weight: 600; font-size: 18px; margin-bottom: 5px; text-align: center;">เซิร์ฟเวอร์ไทย</div>
                 <div style="color: var(--success-color); font-weight: 500; margin-bottom: 10px;">ออนไลน์</div>
                 <div style="color: #777; font-size: 14px; margin-bottom: 15px; text-align: center;">Ping: 15ms | โหลด: 45%</div>
-                <button class="btn" style="width: 200px; max-width: 100%;">
+                <button class="btn">
                     <i class="fas fa-plug"></i> เชื่อมต่อ
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="footer-copyright" style="text-align: center; padding: 20px; color: #777; margin-top: 20px;">
+    <div class="footer-copyright">
         &copy; 2025 VIP VPN Thailand. All rights reserved.
     </div>
     

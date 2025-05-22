@@ -22,7 +22,7 @@
 
 body {
     font-family: 'Prompt', sans-serif;
-    background: #f9fafc;
+    background: #f9fafc; /* Added this line */
     background-image: url('https://i.pinimg.com/736x/ea/2c/f6/ea2cf6975ca4178d53a27b72c301f7b2.jpg');
     background-size: cover;
     background-position: center;
@@ -177,6 +177,289 @@ input[type="password"]:focus {
     color: var(--secondary-color);
     text-decoration: underline;
 }
+
+/* Checkbox group styling for register.php */
+.checkbox-group {
+    display: flex;
+    align-items: flex-start; /* Align checkbox with the start of the text block */
+    gap: 10px; /* Space between checkbox and label */
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto !important; /* Override width: 100% from general input styles. Use !important if necessary due to specificity */
+    margin-top: 3px; /* Small adjustment to align better with the text line */
+    flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+.checkbox-group label {
+    display: inline; /* Allow label to flow next to checkbox */
+    margin-bottom: 0; /* Override general label margin */
+    flex-grow: 1; /* Allow label to take available space */
+}
+
+.checkbox-group label a {
+    color: var(--primary-color);
+    text-decoration: underline; /* Ensure links are clearly indicated */
+}
+
+/* Styles moved from topup.php */
+.topup-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.credit-display {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: var(--success-color); /* Changed to use variable */
+}
+
+.topup-message { /* Renamed from .message for topup.php context */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.topup-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.topup-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.btn-topup {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(to right, #2ecc71, #27ae60); /* var(--success-color) based */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-topup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4);
+}
+
+/* Styles moved from settings.php */
+.settings-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 30px;
+    background: white;
+    border-radius: var(--border-radius); /* Use variable */
+    box-shadow: var(--box-shadow); /* Use variable */
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.tab {
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    background: #f5f7ff;
+    color: var(--dark-color);
+}
+
+.tab.active {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 5px 15px rgba(71, 118, 230, 0.2);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out; /* Uses existing fadeIn keyframe */
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+    margin-bottom: 0; /* Adjusted as form-row handles bottom margin */
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--dark-color);
+    text-decoration: none;
+    margin-bottom: 20px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+}
+
+.back-link i {
+    margin-right: 8px;
+}
+
+/* Scoped password-toggle for settings page if needed, or integrate with global */
+.settings-container .password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%; /* Vertically center */
+    transform: translateY(-50%);
+    color: #777;
+    cursor: pointer;
+}
+
+.card-header { /* Specific to settings.php sections */
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.card-header i {
+    font-size: 24px; /* Consider making this a variable if used elsewhere */
+    background: var(--primary-gradient);
+    color: white;
+    padding: 12px;
+    border-radius: var(--border-radius); /* Use variable */
+    margin-right: 15px;
+}
+
+.card-header h2 {
+    margin: 0;
+    text-align: left; /* Override general h2 text-align: center */
+}
+
+.warning-box {
+    background-color: rgba(255, 187, 0, 0.1); /* Consider var(--warning-color) with alpha */
+    border-left: 4px solid #ffbb00; /* Consider var(--warning-color) */
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: var(--border-radius); /* Use variable */
+    display: flex;
+    align-items: flex-start;
+}
+
+.warning-box i {
+    font-size: 24px;
+    color: #ffbb00; /* Consider var(--warning-color) */
+    margin-right: 15px;
+    margin-top: 3px;
+}
+
+.warning-box h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #e65100; /* Darker shade of warning */
+}
+
+.warning-box p {
+    margin: 0;
+    color: #555;
+}
+
+/* Modal Styles from settings.php */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Ensure it's above other content */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal {
+    background: white;
+    border-radius: var(--border-radius); /* Use variable */
+    padding: 30px;
+    width: 90%; /* Responsive width */
+    max-width: 500px; /* Max width for larger screens */
+    transform: translateY(-20px);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-overlay.active .modal {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header i {
+    font-size: 24px;
+    color: var(--danger-color); /* Use variable */
+    margin-right: 15px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--dark-color); /* Use variable */
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: #555; /* Consistent text color */
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cancel { /* Specific button style for modal cancel */
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd; /* Added for better definition */
+}
+
+.btn-cancel:hover {
+    background: #e0e0e0;
+}
+/* End of styles moved from settings.php */
 
 /* Header styles */
 .header {
@@ -517,4 +800,12 @@ input[type="password"]:focus {
 .form-check label {
     margin-bottom: 0;
     cursor: pointer;
+}
+
+/* Footer Copyright Styling */
+.footer-copyright {
+    text-align: center;
+    padding: 20px;
+    color: #777;
+    margin-top: 20px;
 }

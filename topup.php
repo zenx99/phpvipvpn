@@ -174,7 +174,7 @@ $db->close();
         }
     </style>
 </head>
-<body class="dashboard-body" style="display: block; padding-top: 80px; background: #f9fafc;">
+<body class="dashboard-body">
     <div class="header">
         <div class="header-logo">
             <img src="https://i.imgur.com/J1bqW0o.png" alt="VIP VPN Logo">
@@ -208,7 +208,7 @@ $db->close();
         </div>
 
         <?php if ($message): ?>
-            <div class="message <?php echo $messageType; ?>">
+            <div class="topup-message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
@@ -216,7 +216,7 @@ $db->close();
         <form method="POST" action="topup.php">
             <div class="form-group">
                 <label for="voucher">ลิ้งค์อั่งเปา TrueMoney:</label>
-                <input type="text" id="voucher" name="voucher" class="form-control" 
+                <input type="text" id="voucher" name="voucher" 
                        placeholder="วางลิ้งค์อั่งเปาที่นี่" required>
             </div>
             <button type="submit" class="btn-topup">
