@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// Set timezone to Asia/Bangkok (Thailand timezone)
+date_default_timezone_set('Asia/Bangkok');
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -26,27 +29,86 @@ $message = '';
 $messageType = '';
 $vlessCode = '';
 $expiryTime = '';
+$timeAmount = 0;
+$creditCost = 0;
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $vpsType = $_POST['vpsType'] ?? 'IDC';
+    $profileKey = $_POST['profileKey'] ?? '';
+    $codeName = $_POST['codeName'] ?? '';
+    $timeAmount = intval($_POST['timeAmount'] ?? 0);
+    // Calculate credit cost (4 credits per day)
+    $creditCost = 4 * $timeAmount;
+    // Always treat duration as days (timeUnit removed)
+    $timeUnit = 'day';
+    $gbLimit = intval($_POST['gbLimit'] ?? 0);
+    $ipLimit = intval($_POST['ipLimit'] ?? 1);
+    
     // Check if user has enough credits based on selected days
     if ($credits < $creditCost) {
         $messageType = 'error';
         $message = "เครดิตไม่เพียงพอ ต้องใช้ {$creditCost} เครดิตสำหรับ {$timeAmount} วัน";
     } else {
-        $vpsType = $_POST['vpsType'] ?? 'IDC';
-        $profileKey = $_POST['profileKey'] ?? '';
-        $codeName = $_POST['codeName'] ?? '';
-        $timeAmount = intval($_POST['timeAmount'] ?? 0);
-        // Calculate credit cost (4 credits per day)
-        $creditCost = 4 * $timeAmount;
-        // Always treat duration as days (timeUnit removed)
-        $timeUnit = 'day';
-        $gbLimit = intval($_POST['gbLimit'] ?? 0);
-        $ipLimit = intval($_POST['ipLimit'] ?? 1);
+        // ตัวแปรถูกกำหนดค่าที่ด้านบนแล้ว
 
+        // First check if server has capacity (max 30 users)
+        $totalOnlineUsers = 0;
+        $validProfiles = ['true_dtac_nopro', 'true_zoom', 'ais', 'true_pro_facebook'];
+        $serverIsFull = false;
+        
+        try {
+            $apiUrl = 'http://103.245.164.86:4040/client/onlines';
+            $processedUsers = [];  // Track unique users
+            
+            foreach ($validProfiles as $checkProfileKey) { // ใช้ตัวแปรอื่นเพื่อไม่ให้ทับตัวแปร $profileKey ที่ได้จาก POST
+                $postData = json_encode([
+                    'vpsType' => 'IDC',
+                    'profileKey' => $checkProfileKey
+                ]);
+        
+                $ch = curl_init($apiUrl);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_POST => true,
+                    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                    CURLOPT_POSTFIELDS => $postData,
+                    CURLOPT_TIMEOUT => 2 // Set timeout to 2 seconds
+                ]);
+        
+                $response = curl_exec($ch);
+                
+                if (!curl_errno($ch) && curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200) {
+                    $json = json_decode($response, true);
+                    if (isset($json['success']) && $json['success'] && isset($json['list'])) {
+                        foreach ($json['list'] as $clientName) {
+                            $clientNameClean = trim($clientName);
+                            if (!empty($clientNameClean) && !isset($processedUsers[$clientNameClean])) {
+                                $processedUsers[$clientNameClean] = true;
+                                $totalOnlineUsers++;
+                            }
+                        }
+                    }
+                }
+                curl_close($ch);
+            }
+            
+            // Check if server is full (30 users max)
+            if ($totalOnlineUsers >= 30) {
+                $serverIsFull = true;
+            }
+        } catch (Exception $e) {
+            // If API fails, we'll assume server is not full to allow creation
+            $serverIsFull = false;
+        }
+        
+        // If server is full, show error message
+        if ($serverIsFull) {
+            $messageType = 'error';
+            $message = 'เซิร์ฟเวอร์เต็มแล้ว (30/30) ไม่สามารถสร้างโค้ด VPN เพิ่มได้ กรุณารอให้มีผู้ใช้ออฟไลน์ก่อน';
+        }
         // Validate inputs
-        if (empty($profileKey) || empty($codeName) || $timeAmount <= 0) {
+        else if (empty($profileKey) || empty($codeName) || $timeAmount <= 0) {
             $messageType = 'error';
             $message = 'กรุณากรอกข้อมูลให้ครบถ้วน';
         } else {
@@ -83,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message = 'การเชื่อมต่อผิดพลาด: ' . curl_error($ch);
                 } elseif ($httpCode !== 200) {
                     $messageType = 'error';
-                    $message = 'เซิร์ฟเวอร์ผิดพลาด (HTTP ' . $httpCode . ')';
+                    $message = 'เซิร์ฟเวอร์ผิดพลาด (HTTP ' . $httpCode . ')' . ' Data: ' . $postData;
                 } else {
                     $json = json_decode($response, true);
                     if (isset($json['success']) && $json['success']) {
@@ -93,8 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $updateStmt->bindValue(':id', $user_id, SQLITE3_INTEGER);
                         $updateStmt->execute();
 
-                        // Save VPN history
-                        $historyStmt = $db->prepare('INSERT INTO vpn_history (user_id, code_name, profile_key, vless_code, expiry_time, gb_limit, ip_limit) VALUES (:user_id, :code_name, :profile_key, :vless_code, :expiry_time, :gb_limit, :ip_limit)');
+                        // Save VPN history - use current date/time in Thailand timezone
+                        $currentDateTime = date('Y-m-d H:i:s');
+                        $historyStmt = $db->prepare('INSERT INTO vpn_history (user_id, code_name, profile_key, vless_code, expiry_time, gb_limit, ip_limit, is_enabled, created_at) VALUES (:user_id, :code_name, :profile_key, :vless_code, :expiry_time, :gb_limit, :ip_limit, :is_enabled, :created_at)');
                         $historyStmt->bindValue(':user_id', $user_id, SQLITE3_INTEGER);
                         $historyStmt->bindValue(':code_name', $codeName, SQLITE3_TEXT);
                         $historyStmt->bindValue(':profile_key', $profileKey, SQLITE3_TEXT);
@@ -102,6 +165,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $historyStmt->bindValue(':expiry_time', $json['expiryTime'], SQLITE3_INTEGER);
                         $historyStmt->bindValue(':gb_limit', $gbLimit, SQLITE3_INTEGER);
                         $historyStmt->bindValue(':ip_limit', $ipLimit, SQLITE3_INTEGER);
+                        $historyStmt->bindValue(':is_enabled', 1, SQLITE3_INTEGER);
+                        $historyStmt->bindValue(':created_at', $currentDateTime, SQLITE3_TEXT);
                         $historyStmt->execute();
 
                         $messageType = 'success';
@@ -113,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $credits -= $creditCost;
                     } else {
                         $messageType = 'error';
-                        $message = 'เซิร์ฟเวอร์ตอบกลับผิดพลาด';
+                        $message = 'เซิร์ฟเวอร์ตอบกลับผิดพลาด: ' . (isset($json['message']) ? $json['message'] : 'ไม่ทราบสาเหตุ') . ' [Profile: ' . $profileKey . ']';
                     }
                 }
                 curl_close($ch);
