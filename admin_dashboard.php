@@ -92,11 +92,51 @@ if (isset($_POST['edit_user'])) {
     }
 }
 
-// Get all users from the database
+// Get all users from the database with purchase statistics
 $users = [];
 try {
     $db = new SQLite3($db_file);
-    $result = $db->query('SELECT id, username, credits, created_at FROM users ORDER BY id DESC');
+    
+    // Get users with additional statistics
+    $query = "
+        SELECT 
+            u.id, 
+            u.username, 
+            u.credits, 
+            u.created_at,
+            COALESCE(vpn_stats.vpn_count, 0) as vpn_count,
+            COALESCE(vpn_stats.packages, '') as packages,
+            COALESCE(topup_stats.total_topup, 0) as total_topup,
+            COALESCE(topup_stats.topup_count, 0) as topup_count
+        FROM users u
+        LEFT JOIN (
+            SELECT 
+                user_id, 
+                COUNT(*) as vpn_count,
+                GROUP_CONCAT(DISTINCT 
+                    CASE 
+                        WHEN profile_key = 'true_pro_facebook' THEN 'True Pro FB'
+                        WHEN profile_key = 'true_zoom' THEN 'True Zoom'
+                        WHEN profile_key = 'ais' THEN 'AIS'
+                        WHEN profile_key = 'dtac' THEN 'DTAC'
+                        ELSE profile_key
+                    END
+                ) as packages
+            FROM vpn_history 
+            GROUP BY user_id
+        ) vpn_stats ON u.id = vpn_stats.user_id
+        LEFT JOIN (
+            SELECT 
+                user_id, 
+                COUNT(*) as topup_count,
+                SUM(amount) as total_topup
+            FROM topup_history 
+            GROUP BY user_id
+        ) topup_stats ON u.id = topup_stats.user_id
+        ORDER BY u.id DESC
+    ";
+    
+    $result = $db->query($query);
     
     while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
         $users[] = $row;
@@ -186,6 +226,9 @@ try {
                                     <th class="p-3 text-sm font-semibold">ID</th>
                                     <th class="p-3 text-sm font-semibold">Username</th>
                                     <th class="p-3 text-sm font-semibold">Credits</th>
+                                    <th class="p-3 text-sm font-semibold">VPN Codes</th>
+                                    <th class="p-3 text-sm font-semibold">Packages</th>
+                                    <th class="p-3 text-sm font-semibold">Top-ups</th>
                                     <th class="p-3 text-sm font-semibold">Created At</th>
                                     <th class="p-3 text-sm font-semibold">Actions</th>
                                 </tr>
@@ -194,9 +237,70 @@ try {
                                 <?php foreach ($users as $user): ?>
                                     <tr class="border-b hover:bg-gray-50">
                                         <td class="p-3 text-sm"><?php echo htmlspecialchars($user['id']); ?></td>
-                                        <td class="p-3 text-sm"><?php echo htmlspecialchars($user['username']); ?></td>
+                                        <td class="p-3 text-sm font-medium"><?php echo htmlspecialchars($user['username']); ?></td>
                                         <td class="p-3 text-sm">
                                             <span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs"><?php echo htmlspecialchars($user['credits']); ?></span>
+                                        </td>
+                                        <td class="p-3 text-sm">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+                                                    <i class="fas fa-code mr-1"></i><?php echo htmlspecialchars($user['vpn_count']); ?>
+                                                </span>
+                                                <?php if ($user['vpn_count'] > 0): ?>
+                                                    <button onclick="showVPNDetails(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username']); ?>')" 
+                                                            class="text-blue-500 hover:text-blue-700 text-xs">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 text-sm">
+                                            <?php if (!empty($user['packages'])): ?>
+                                                <div class="flex flex-wrap gap-1">
+                                                    <?php 
+                                                    $packages = explode(',', $user['packages']);
+                                                    foreach (array_slice($packages, 0, 2) as $package): 
+                                                        $package = trim($package);
+                                                        $colorClass = '';
+                                                        switch($package) {
+                                                            case 'True Pro FB': $colorClass = 'bg-blue-600'; break;
+                                                            case 'True Zoom': $colorClass = 'bg-purple-600'; break;
+                                                            case 'AIS': $colorClass = 'bg-green-600'; break;
+                                                            case 'DTAC': $colorClass = 'bg-orange-600'; break;
+                                                            default: $colorClass = 'bg-gray-600';
+                                                        }
+                                                    ?>
+                                                        <span class="<?php echo $colorClass; ?> text-white px-2 py-1 rounded text-xs">
+                                                            <?php echo htmlspecialchars($package); ?>
+                                                        </span>
+                                                    <?php endforeach; ?>
+                                                    <?php if (count($packages) > 2): ?>
+                                                        <span class="bg-gray-400 text-white px-2 py-1 rounded text-xs">
+                                                            +<?php echo count($packages) - 2; ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <span class="text-gray-400 text-xs">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="p-3 text-sm">
+                                            <?php if ($user['topup_count'] > 0): ?>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs">
+                                                        <i class="fas fa-plus-circle mr-1"></i><?php echo htmlspecialchars($user['topup_count']); ?>
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">
+                                                        ฿<?php echo number_format($user['total_topup'], 0); ?>
+                                                    </span>
+                                                    <button onclick="showTopupDetails(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['username']); ?>')" 
+                                                            class="text-blue-500 hover:text-blue-700 text-xs">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            <?php else: ?>
+                                                <span class="text-gray-400 text-xs">-</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="p-3 text-sm"><?php echo htmlspecialchars($user['created_at']); ?></td>
                                         <td class="p-3 text-sm flex space-x-2">
@@ -260,6 +364,38 @@ try {
         </div>
     </div>
 
+    <!-- VPN Details Modal -->
+    <div id="vpnModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800"><i class="fas fa-code mr-2"></i>VPN Codes History</h2>
+                <button onclick="closeVPNModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div id="vpnModalContent">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                    <p class="text-gray-500 mt-2">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Topup Details Modal -->
+    <div id="topupModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800"><i class="fas fa-plus-circle mr-2"></i>Topup History</h2>
+                <button onclick="closeTopupModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div id="topupModalContent">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                    <p class="text-gray-500 mt-2">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Handle user menu dropdown
         document.addEventListener('DOMContentLoaded', function() {
@@ -320,6 +456,148 @@ try {
                 closeModal();
             }
         };
+
+        // VPN Details Modal Functions
+        function showVPNDetails(userId, username) {
+            document.getElementById('vpnModal').classList.remove('hidden');
+            loadVPNDetails(userId, username);
+        }
+
+        function closeVPNModal() {
+            document.getElementById('vpnModal').classList.add('hidden');
+        }
+
+        function loadVPNDetails(userId, username) {
+            const content = document.getElementById('vpnModalContent');
+            
+            fetch('admin_ajax.php?action=get_vpn_history&user_id=' + userId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let html = '<h3 class="text-lg font-medium mb-4">VPN Codes for: ' + username + '</h3>';
+                        
+                        if (data.vpn_history && data.vpn_history.length > 0) {
+                            html += '<div class="overflow-x-auto">';
+                            html += '<table class="w-full text-left border-collapse">';
+                            html += '<thead><tr class="bg-gray-50">';
+                            html += '<th class="border p-3 text-sm font-semibold">Code Name</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Package</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">GB Limit</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">IP Limit</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Status</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Created</th>';
+                            html += '</tr></thead><tbody>';
+                            
+                            data.vpn_history.forEach(function(vpn) {
+                                const packageName = getPackageName(vpn.profile_key);
+                                const isExpired = vpn.expiry_time < (Date.now() / 1000);
+                                const statusClass = isExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                                const statusText = isExpired ? 'Expired' : 'Active';
+                                
+                                html += '<tr class="border-b hover:bg-gray-50">';
+                                html += '<td class="border p-3 text-sm">' + vpn.code_name + '</td>';
+                                html += '<td class="border p-3 text-sm">' + packageName + '</td>';
+                                html += '<td class="border p-3 text-sm">' + (vpn.gb_limit || 'Unlimited') + '</td>';
+                                html += '<td class="border p-3 text-sm">' + vpn.ip_limit + '</td>';
+                                html += '<td class="border p-3 text-sm"><span class="px-2 py-1 rounded text-xs ' + statusClass + '">' + statusText + '</span></td>';
+                                html += '<td class="border p-3 text-sm">' + new Date(vpn.created_at).toLocaleDateString() + '</td>';
+                                html += '</tr>';
+                            });
+                            
+                            html += '</tbody></table></div>';
+                        } else {
+                            html += '<p class="text-gray-500 text-center py-8">No VPN codes found for this user.</p>';
+                        }
+                        
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<p class="text-red-500 text-center py-8">Error loading VPN details.</p>';
+                    }
+                })
+                .catch(error => {
+                    content.innerHTML = '<p class="text-red-500 text-center py-8">Error loading VPN details.</p>';
+                });
+        }
+
+        // Topup Details Modal Functions
+        function showTopupDetails(userId, username) {
+            document.getElementById('topupModal').classList.remove('hidden');
+            loadTopupDetails(userId, username);
+        }
+
+        function closeTopupModal() {
+            document.getElementById('topupModal').classList.add('hidden');
+        }
+
+        function loadTopupDetails(userId, username) {
+            const content = document.getElementById('topupModalContent');
+            
+            fetch('admin_ajax.php?action=get_topup_history&user_id=' + userId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let html = '<h3 class="text-lg font-medium mb-4">Topup History for: ' + username + '</h3>';
+                        
+                        if (data.topup_history && data.topup_history.length > 0) {
+                            html += '<div class="overflow-x-auto">';
+                            html += '<table class="w-full text-left border-collapse">';
+                            html += '<thead><tr class="bg-gray-50">';
+                            html += '<th class="border p-3 text-sm font-semibold">Amount</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Credits</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Method</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Reference</th>';
+                            html += '<th class="border p-3 text-sm font-semibold">Date</th>';
+                            html += '</tr></thead><tbody>';
+                            
+                            data.topup_history.forEach(function(topup) {
+                                html += '<tr class="border-b hover:bg-gray-50">';
+                                html += '<td class="border p-3 text-sm">฿' + parseFloat(topup.amount).toFixed(2) + '</td>';
+                                html += '<td class="border p-3 text-sm">' + topup.credits + '</td>';
+                                html += '<td class="border p-3 text-sm">' + getMethodName(topup.method) + '</td>';
+                                html += '<td class="border p-3 text-sm"><code class="text-xs bg-gray-100 px-1 rounded">' + topup.reference + '</code></td>';
+                                html += '<td class="border p-3 text-sm">' + new Date(topup.created_at).toLocaleDateString() + '</td>';
+                                html += '</tr>';
+                            });
+                            
+                            html += '</tbody></table></div>';
+                        } else {
+                            html += '<p class="text-gray-500 text-center py-8">No topup history found for this user.</p>';
+                        }
+                        
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<p class="text-red-500 text-center py-8">Error loading topup details.</p>';
+                    }
+                })
+                .catch(error => {
+                    content.innerHTML = '<p class="text-red-500 text-center py-8">Error loading topup details.</p>';
+                });
+        }
+
+        function getPackageName(profileKey) {
+            const packages = {
+                'true_pro_facebook': 'True Pro FB',
+                'true_zoom': 'True Zoom',
+                'ais': 'AIS',
+                'dtac': 'DTAC'
+            };
+            return packages[profileKey] || profileKey;
+        }
+
+        function getMethodName(method) {
+            const methods = {
+                'truemoney': 'TrueMoney Voucher',
+                'truemoney_angpao': 'TrueMoney Angpao',
+                'truewallet_slip': 'TrueWallet Slip',
+                'bank_slip_KBANK': 'Bank Transfer (KBANK)',
+                'bank_slip_SCB': 'Bank Transfer (SCB)',
+                'bank_slip_BBL': 'Bank Transfer (BBL)',
+                'bank_slip_KTB': 'Bank Transfer (KTB)',
+                'bank_slip_TMB': 'Bank Transfer (TMB)',
+                'bank_slip_BAY': 'Bank Transfer (BAY)'
+            };
+            return methods[method] || method;
+        }
     </script>
 </body>
 </html>

@@ -30,19 +30,9 @@ try {
     $endTime = microtime(true);
     $pingMs = round(($endTime - $startTime) * 1000);
     
-    // Optimize ping values to stay mostly in 1-100ms range with occasional spikes to 200ms
-    // Determine if this should be a spike (5% chance)
-    $shouldSpike = (rand(1, 100) <= 5);
-    
-    if ($shouldSpike) {
-        // Create a spike between 101-200ms (yellow range)
-        $pingMs = rand(101, 200);
-    } else {
-        // Normal ping in green range (10-100ms)
-        $baseValue = rand(10, 80);
-        $smallVariation = rand(-5, 20);
-        $pingMs = max(10, min(100, $baseValue + $smallVariation));
-    }
+    // Optimize ping values to stay in the 10-25ms range as requested
+    // Fixed optimal ping range between 10-25ms
+    $pingMs = rand(10, 25);
     
     $responseData['ping'] = $pingMs;
     
@@ -78,12 +68,8 @@ try {
         curl_close($ch);
     }
     
-    // Calculate server load percentage based on capacity (30 users max)
-    $baseLoad = round(($responseData['onlineUsers'] / 30) * 100);
-    
-    // Add some small random variation to the load (+/- 5%)
-    $loadVariation = rand(-5, 5);
-    $totalLoad = max(1, min(100, $baseLoad + $loadVariation)); // Keep between 1% and 100%
+    // Set server load to be between 70-100% as requested
+    $totalLoad = rand(70, 100); 
     $responseData['load'] = $totalLoad;
     
 } catch (Exception $e) {

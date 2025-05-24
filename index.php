@@ -32,11 +32,8 @@ try {
     $apiUrl = 'http://103.245.164.86:4040/client/onlines';
     $processedUsers = [];  // Track unique users
     
-    // Get ping to server
-    $startTime = microtime(true);
-    $pingTest = @file_get_contents($apiUrl, false, stream_context_create(['http' => ['method' => 'HEAD', 'timeout' => 2]]));
-    $endTime = microtime(true);
-    $pingMs = round(($endTime - $startTime) * 1000);
+    // Get ping to server - set to optimal range 10-25ms
+    $pingMs = rand(10, 25);
     $serverPing = $pingMs . "ms";
     
     foreach ($validProfiles as $profileKey) {
@@ -71,8 +68,8 @@ try {
         curl_close($ch);
     }
     
-    // Calculate server load percentage based on capacity (30 users max)
-    $serverLoad = round(($totalOnlineUsers / 30) * 100) . "%";
+    // Set server load to be between 70-100% as requested
+    $serverLoad = rand(70, 100) . "%";
 } catch (Exception $e) {
     // Silently fail - we'll just show 0 users
 }
@@ -278,18 +275,9 @@ $db->close();
                 <div class="text-lg font-semibold text-white mb-2">เซิร์ฟเวอร์ไทย</div>
                 <div class="flex items-center mb-4">
                     <?php 
-                        // Set ping colors consistent with the JavaScript logic:
-                        // ≤100ms: Green, 101-200ms: Yellow, >200ms: Red
-                        if ($pingMs <= 100) {
-                            $pingClass = 'bg-green-500';
-                            $textClass = 'text-green-300';
-                        } elseif ($pingMs <= 200) {
-                            $pingClass = 'bg-yellow-500';
-                            $textClass = 'text-yellow-300';
-                        } else {
-                            $pingClass = 'bg-red-500';
-                            $textClass = 'text-red-300';
-                        }
+                        // Always green for optimal ping (10-25ms)
+                        $pingClass = 'bg-green-500';
+                        $textClass = 'text-green-300';
                     ?>
                     <span id="status-light" class="w-3 h-3 rounded-full mr-2 <?php echo $pingClass; ?> animate-[blink_1s_infinite]"></span>
                     <span id="status-text" class="<?php echo $textClass; ?> font-medium">ออนไลน์</span>
@@ -395,8 +383,9 @@ $db->close();
                     .then(response => response.json())
                     .then(data => {
                         const statsEl = document.getElementById('server-stats');
-                        const ping = data.ping || Math.floor(Math.random() * 291) + 10; 
-                        const load = data.load || Math.floor(Math.random() * 101);
+                        // Use data from server or fallback to optimal ping (10-25ms) and load (70-100%) values
+                        const ping = data.ping || Math.floor(Math.random() * (25 - 10 + 1)) + 10;
+                        const load = data.load || Math.floor(Math.random() * (100 - 70 + 1)) + 70;
                         const onlineUsers = data.onlineUsers || <?php echo $totalOnlineUsers; ?>;
                         const isServerFull = onlineUsers >= 30;
                         
@@ -410,21 +399,13 @@ $db->close();
                             statsEl.innerHTML = `<span>${pingLoad}</span><br>${usersText}`;
                         }
                         
-                        // Update status light
+                        // Update status light - always green since ping is in optimal range (10-25ms)
                         const statusLight = document.getElementById('status-light');
                         if (statusLight) {
                             statusLight.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
-                            // Green for good ping, yellow for moderate, red for high ping
-                            if (ping <= 100) {
-                                statusLight.classList.add('bg-green-500');
-                                document.getElementById('status-text').className = 'text-green-300 font-medium';
-                            } else if (ping <= 200) {
-                                statusLight.classList.add('bg-yellow-500');
-                                document.getElementById('status-text').className = 'text-yellow-300 font-medium';
-                            } else {
-                                statusLight.classList.add('bg-red-500');
-                                document.getElementById('status-text').className = 'text-red-300 font-medium';
-                            }
+                            // Always green for optimal ping (10-25ms)
+                            statusLight.classList.add('bg-green-500');
+                            document.getElementById('status-text').className = 'text-green-300 font-medium';
                         }
                         
                         // Update create button state
