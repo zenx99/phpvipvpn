@@ -34,6 +34,9 @@ if ($voucherClassExists) {
     class_exists('M4h45amu7x\Voucher');
 }
 
+// Include verification functions
+require_once('topup_functions.php');
+
 // Handle form submission for truemoney voucher
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['voucher_url']) && $voucherClassExists) {
     $voucherUrl = $_POST['voucher_url'] ?? '';
@@ -110,212 +113,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_angpao_link'])
         $messageType = 'error';
         $message = 'กรุณาใส่ลิงก์ซองอั่งเปา';
     } else {
-        // Check if the link is valid - support multiple TrueMoney gift link formats
-        $voucherHash = null;
+        // Use the new verification function
+        $verificationResult = verifyPaymentLinkangpao($angpaoLink);
         
-        // Pattern 1: Standard gift link
-        $linkRegex1 = '/https:\/\/gift\.truemoney\.com\/campaign\/?\?v=([0-9A-Fa-f]{32})/';
-        if (preg_match($linkRegex1, $angpaoLink, $matches)) {
-            $voucherHash = $matches[1];
-        }
-        
-        // Pattern 2: Alternative campaign link format
-        if (!$voucherHash) {
-            $linkRegex2 = '/https:\/\/gift\.truemoney\.com\/campaign\?v=([0-9A-Fa-f]{32})/';
-            if (preg_match($linkRegex2, $angpaoLink, $matches)) {
-                $voucherHash = $matches[1];
-            }
-        }
-        
-        // Pattern 3: More flexible pattern for various hash lengths and formats
-        if (!$voucherHash) {
-            $linkRegex3 = '/v=([0-9A-Fa-f]{18,50})/';
-            if (preg_match($linkRegex3, $angpaoLink, $matches)) {
-                $voucherHash = $matches[1];
-            }
-        }
-        
-        if (!$voucherHash) {
+        if (!$verificationResult['success']) {
             $messageType = 'error';
-            $message = 'ลิงก์ซองอั่งเปาไม่ถูกต้อง กรุณาตรวจสอบลิงก์อีกครั้ง';
+            $message = $verificationResult['message'];
         } else {
-            // Initialize cURL with headers that mimic a real browser request
-            $curl = curl_init();
+            $voucherHash = $verificationResult['voucher_hash'];
+            $amount = $verificationResult['amount'];
             
-            // Try to verify voucher first before attempting redemption
-            $verifyUrl = "https://gift.truemoney.com/campaign/vouchers/{$voucherHash}";
+            // Check if this voucher hash has been used before
+            $checkStmt = $db->prepare('SELECT id FROM topup_history WHERE reference = :reference');
+            $checkStmt->bindValue(':reference', $voucherHash, SQLITE3_TEXT);
+            $checkResult = $checkStmt->execute();
             
-            curl_setopt_array($curl, [
-                CURLOPT_URL => $verifyUrl,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => [
-                    'Accept: application/json, text/plain, */*',
-                    'Accept-Language: th-TH,th;q=0.9,en;q=0.8',
-                    'Accept-Encoding: gzip, deflate, br',
-                    'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Referer: https://gift.truemoney.com/',
-                    'Origin: https://gift.truemoney.com',
-                    'DNT: 1',
-                    'Connection: keep-alive',
-                    'Sec-Fetch-Dest: empty',
-                    'Sec-Fetch-Mode: cors',
-                    'Sec-Fetch-Site: same-origin'
-                ],
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_CONNECTTIMEOUT => 10,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_FOLLOWLOCATION => true
-            ]);
-            
-            $verifyResponse = curl_exec($curl);
-            $verifyHttpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            
-            // If verification fails, try the redemption endpoint
-            if ($verifyHttpCode !== 200 || !$verifyResponse) {
-                // Setup redemption request
-                $mobileNumber = '0825658423';
-                $postData = json_encode([
-                    'mobile' => $mobileNumber,
-                    'voucher_hash' => $voucherHash
-                ]);
-                
-                curl_setopt_array($curl, [
-                    CURLOPT_URL => "https://gift.truemoney.com/campaign/vouchers/{$voucherHash}/redeem",
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $postData,
-                    CURLOPT_HTTPHEADER => [
-                        'Content-Type: application/json',
-                        'Accept: application/json, text/plain, */*',
-                        'Accept-Language: th-TH,th;q=0.9,en;q=0.8',
-                        'Accept-Encoding: gzip, deflate, br',
-                        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        'Referer: https://gift.truemoney.com/',
-                        'Origin: https://gift.truemoney.com',
-                        'DNT: 1',
-                        'Connection: keep-alive',
-                        'Sec-Fetch-Dest: empty',
-                        'Sec-Fetch-Mode: cors',
-                        'Sec-Fetch-Site: same-origin'
-                    ]
-                ]);
-                
-                $response = $verifyResponse = curl_exec($curl);
-            } else {
-                $response = $verifyResponse;
-            }
-            
-            $response = curl_exec($curl);
-            $err = curl_error($curl);
-            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            curl_close($curl);
-            
-            if ($err) {
+            if ($checkResult->fetchArray(SQLITE3_ASSOC)) {
+                // This voucher has been used
                 $messageType = 'error';
-                $message = 'เกิดข้อผิดพลาดในการตรวจสอบอั่งเปา: ' . $err;
+                $message = 'ซองอั่งเปานี้ถูกใช้งานไปแล้ว';
             } else {
-                $result = json_decode($response, true);
+                // Calculate credits (1 baht = 1 credit)
+                $creditRate = 1;
+                $creditsToAdd = $amount * $creditRate;
                 
-                // Log debug information
-                error_log("TrueMoney API - HTTP Code: " . $httpCode);
-                error_log("TrueMoney API - Response: " . $response);
-                error_log("TrueMoney API - Voucher Hash: " . $voucherHash);
+                // Update user credits
+                $updateStmt = $db->prepare('UPDATE users SET credits = credits + :credits WHERE id = :id');
+                $updateStmt->bindValue(':credits', $creditsToAdd, SQLITE3_INTEGER);
+                $updateStmt->bindValue(':id', $user_id, SQLITE3_INTEGER);
+                $updateStmt->execute();
                 
-                // Check for successful response
-                if ($result && isset($result['status']) && isset($result['status']['code'])) {
-                    $statusCode = $result['status']['code'];
-                    
-                    if ($statusCode === 'SUCCESS') {
-                        // Successful verification and redemption
-                        $amount = 0;
-                        
-                        // Try different response structures
-                        if (isset($result['data']['my_ticket']['amount_baht'])) {
-                            $amount = floatval($result['data']['my_ticket']['amount_baht']);
-                        } elseif (isset($result['data']['voucher']['amount_baht'])) {
-                            $amount = floatval($result['data']['voucher']['amount_baht']);
-                        } elseif (isset($result['data']['amount'])) {
-                            $amount = floatval($result['data']['amount']);
-                        }
-                        
-                        // Check if this transaction has been used before
-                        $checkStmt = $db->prepare('SELECT id FROM topup_history WHERE reference = :reference');
-                        $checkStmt->bindValue(':reference', $voucherHash, SQLITE3_TEXT);
-                        $checkResult = $checkStmt->execute();
-                        
-                        if ($checkResult->fetchArray(SQLITE3_ASSOC)) {
-                            // This transaction has been used
-                            $messageType = 'error';
-                            $message = 'ซองอั่งเปานี้ถูกใช้งานไปแล้ว';
-                        } else if ($amount > 0) {
-                            // Calculate credits (1 baht = 1 credit)
-                            $creditRate = 1;
-                            $creditsToAdd = $amount * $creditRate;
-                            
-                            // Update user credits
-                            $updateStmt = $db->prepare('UPDATE users SET credits = credits + :credits WHERE id = :id');
-                            $updateStmt->bindValue(':credits', $creditsToAdd, SQLITE3_INTEGER);
-                            $updateStmt->bindValue(':id', $user_id, SQLITE3_INTEGER);
-                            $updateStmt->execute();
-                            
-                            // Record transaction
-                            $transactionStmt = $db->prepare('INSERT INTO topup_history (user_id, amount, credits, method, reference) VALUES (:user_id, :amount, :credits, :method, :reference)');
-                            $transactionStmt->bindValue(':user_id', $user_id, SQLITE3_INTEGER);
-                            $transactionStmt->bindValue(':amount', $amount, SQLITE3_FLOAT);
-                            $transactionStmt->bindValue(':credits', $creditsToAdd, SQLITE3_INTEGER);
-                            $transactionStmt->bindValue(':method', 'truemoney_angpao', SQLITE3_TEXT);
-                            $transactionStmt->bindValue(':reference', $voucherHash, SQLITE3_TEXT);
-                            $transactionStmt->execute();
-                            
-                            $messageType = 'success';
-                            $message = "เติมเงินสำเร็จ คุณได้รับ {$creditsToAdd} เครดิต";
-                            
-                            // Update credits for display
-                            $credits += $creditsToAdd;
-                        } else {
-                            $messageType = 'error';
-                            $message = 'จำนวนเงินในซองไม่ถูกต้อง';
-                        }
-                    } else {
-                        // Check for specific error codes
-                        $errorMessage = $result['status']['message'] ?? 'ไม่ทราบสาเหตุ';
-                        
-                        switch ($statusCode) {
-                            case 'VOUCHER_NOT_FOUND':
-                                $message = 'ลิงก์อั่งเปาไม่ถูกต้อง หรือถูกใช้ไปแล้ว';
-                                break;
-                            case 'VOUCHER_EXPIRED':
-                                $message = 'อั่งเปาหมดอายุแล้ว';
-                                break;
-                            case 'VOUCHER_ALREADY_USED':
-                            case 'VOUCHER_OUT_OF_STOCK':
-                                $message = 'อั่งเปานี้ถูกใช้งานไปแล้ว';
-                                break;
-                            case 'INVALID_MOBILE':
-                                $message = 'เบอร์โทรศัพท์ไม่ถูกต้อง';
-                                break;
-                            case 'MOBILE_NOT_FOUND':
-                                $message = 'ไม่พบเบอร์โทรศัพท์ในระบบ TrueMoney';
-                                break;
-                            case 'CAMPAIGN_INACTIVE':
-                                $message = 'แคมเปญไม่ได้เปิดใช้งาน';
-                                break;
-                            default:
-                                $message = 'ไม่สามารถตรวจสอบอั่งเปาได้: ' . $errorMessage;
-                        }
-                        $messageType = 'error';
-                    }
-                } else if ($httpCode == 404) {
-                    $messageType = 'error';
-                    $message = 'ลิงก์อั่งเปาไม่ถูกต้อง หรือถูกใช้ไปแล้ว';
-                } else if ($httpCode >= 500) {
-                    $messageType = 'error';
-                    $message = 'เซิร์ฟเวอร์ TrueMoney ไม่พร้อมใช้งานขณะนี้ กรุณาลองอีกครั้งในภายหลัง';
-                } else {
-                    // Failed verification - no valid response
-                    $messageType = 'error';
-                    $message = 'ไม่สามารถยืนยันการชำระเงินได้ กรุณาตรวจสอบลิงก์และลองอีกครั้ง';
-                }
+                // Record transaction
+                $transactionStmt = $db->prepare('INSERT INTO topup_history (user_id, amount, credits, method, reference) VALUES (:user_id, :amount, :credits, :method, :reference)');
+                $transactionStmt->bindValue(':user_id', $user_id, SQLITE3_INTEGER);
+                $transactionStmt->bindValue(':amount', $amount, SQLITE3_FLOAT);
+                $transactionStmt->bindValue(':credits', $creditsToAdd, SQLITE3_INTEGER);
+                $transactionStmt->bindValue(':method', 'truemoney_angpao_api', SQLITE3_TEXT);
+                $transactionStmt->bindValue(':reference', $voucherHash, SQLITE3_TEXT);
+                $transactionStmt->execute();
+                
+                $messageType = 'success';
+                $message = "เติมเงินสำเร็จ คุณได้รับ {$creditsToAdd} เครดิต จากอั่งเปา {$amount} บาท";
+                
+                // Update credits for display
+                $credits += $creditsToAdd;
             }
         }
     }
@@ -1493,8 +1334,8 @@ $db->close();
                     <div class="angpao-example">
                         ตัวอย่างลิงก์อั่งเปา: https://gift.truemoney.com/campaign?v=0196fe0966d57bc8ae5789f50f9747889a5
                     </div>
-                    <div class="angpao-example" style="color: #FF6F00; font-weight: bold;">
-                        หมายเหตุ: 1 บาท = 1 เครดิต, ตรวจสอบและยืนยันการเติมเงินอัตโนมัติ
+                    <div class="angpao-example" style="color: #059669; font-weight: bold;">
+                        หมายเหตุ: ระบบจะตรวจสอบจำนวนเงินอัตโนมัติจาก API, 1 บาท = 1 เครดิต
                     </div>
                 </div>
                 
@@ -1505,7 +1346,7 @@ $db->close();
                             <input type="text" id="angpao_link" name="angpao_link" placeholder="https://gift.truemoney.com/campaign/?v=..." required>
                             <div id="link-validation" style="margin-top: 8px; font-size: 14px; display: none;">
                                 <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                                <span style="color: #10b981;">ลิงก์ถูกต้อง</span>
+                                <span style="color: #10b981;">ลิงก์ถูกต้อง - กำลังตรวจสอบอั่งเปา...</span>
                             </div>
                             <div id="link-error" style="margin-top: 8px; font-size: 14px; display: none;">
                                 <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
@@ -1523,6 +1364,31 @@ $db->close();
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="color: #6b7280;">จำนวนเงิน:</span>
                                 <span id="voucher-amount" style="font-weight: 600; color: #059669;"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #6b7280;">เครดิตที่จะได้รับ:</span>
+                                <span id="voucher-credits" style="font-weight: 600; color: #059669;"></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #6b7280;">สถานะ:</span>
+                                <span id="voucher-status" style="font-weight: 600; color: #059669;">พร้อมใช้งาน</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" name="verify_angpao_link" class="btn btn-primary" id="verify-btn" style="width: 100%;" disabled>
+                        <i class="fas fa-check-circle"></i> ยืนยันการเติมเงิน
+                    </button>
+                    
+                    <!-- Loading State -->
+                    <div id="verification-loading" style="display: none; text-align: center; margin-top: 15px;">
+                        <div style="display: inline-flex; align-items: center; gap: 8px; color: #667eea; font-weight: 500;">
+                            <div class="spinner"></div>
+                            <span>กำลังตรวจสอบอั่งเปา...</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="color: #6b7280;">เครดิตที่จะได้รับ:</span>
@@ -1867,6 +1733,7 @@ $db->close();
             // Form validation and enhanced UX for TrueMoney Angpao Link
             const angpaoLinkForm = document.querySelector('#angpao-form');
             const angpaoLinkInput = document.getElementById('angpao_link');
+            const angpaoAmountInput = document.getElementById('angpao_amount');
             const verifyBtn = document.getElementById('verify-btn');
             const linkValidation = document.getElementById('link-validation');
             const linkError = document.getElementById('link-error');
@@ -1877,8 +1744,8 @@ $db->close();
             let verificationTimeout;
             let currentVoucherData = null;
             
-            if (angpaoLinkInput) {
-                // Real-time link validation and verification
+            if (angpaoLinkInput && angpaoAmountInput) {
+                // Real-time link validation
                 angpaoLinkInput.addEventListener('input', function(e) {
                     const link = e.target.value.trim();
                     
@@ -1907,10 +1774,19 @@ $db->close();
                     // Show format validation success
                     linkValidation.style.display = 'block';
                     
-                    // Debounce API call
-                    verificationTimeout = setTimeout(() => {
-                        verifyVoucherRealTime(link);
-                    }, 800);
+                    // Check if amount is also filled
+                    checkFormCompleteness();
+                });
+                
+                // Amount input validation
+                angpaoAmountInput.addEventListener('input', function(e) {
+                    const amount = parseFloat(e.target.value) || 0;
+                    
+                    checkFormCompleteness();
+                    
+                    if (amount > 0) {
+                        updateVoucherPreview(amount);
+                    }
                 });
                 
                 // Form submission handling
@@ -1918,14 +1794,15 @@ $db->close();
                     e.preventDefault();
                     
                     const link = angpaoLinkInput.value.trim();
+                    const amount = parseFloat(angpaoAmountInput.value) || 0;
                     
                     if (!validateLinkFormat(link)) {
                         showError('รูปแบบลิงก์ไม่ถูกต้อง');
                         return;
                     }
                     
-                    if (!currentVoucherData) {
-                        showError('กรุณารอให้ระบบตรวจสอบอั่งเปาเสร็จสิ้น');
+                    if (amount <= 0) {
+                        showError('กรุณาระบุจำนวนเงินที่ถูกต้อง');
                         return;
                     }
                     
@@ -1933,17 +1810,44 @@ $db->close();
                     verifyBtn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin-right: 8px;"></div> กำลังประมวลผล...';
                     verifyBtn.disabled = true;
                     
-                    // Submit the form with verified data
+                    // Submit the form
                     setTimeout(() => {
                         this.submit();
                     }, 500);
                 });
             }
             
+            function checkFormCompleteness() {
+                const link = angpaoLinkInput.value.trim();
+                const amount = parseFloat(angpaoAmountInput.value) || 0;
+                const isValidLink = validateLinkFormat(link);
+                
+                if (isValidLink && amount > 0) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> ยืนยันการเติมเงิน';
+                    updateVoucherPreview(amount);
+                } else {
+                    verifyBtn.disabled = true;
+                    hideVoucherPreview();
+                }
+            }
+            
+            function updateVoucherPreview(amount) {
+                // Show voucher info preview
+                voucherInfo.style.display = 'block';
+                document.getElementById('voucher-amount').textContent = `${amount} บาท`;
+                document.getElementById('voucher-credits').textContent = `${amount} เครดิต`;
+                document.getElementById('voucher-status').textContent = 'พร้อมใช้งาน';
+            }
+            
+            function hideVoucherPreview() {
+                voucherInfo.style.display = 'none';
+            }
+            
             function hideAllStates() {
                 linkValidation.style.display = 'none';
                 linkError.style.display = 'none';
-                voucherInfo.style.display = 'none';
+                hideVoucherPreview();
                 verificationLoading.style.display = 'none';
                 currentVoucherData = null;
             }
@@ -1964,150 +1868,6 @@ $db->close();
                 
                 return patterns.some(pattern => pattern.test(link));
             }
-            
-            function extractVoucherHash(link) {
-                const hashMatch = link.match(/v=([0-9A-Fa-f]{18,50})/);
-                return hashMatch ? hashMatch[1] : null;
-            }
-            
-            async function verifyVoucherRealTime(link) {
-                try {
-                    // Show loading
-                    verificationLoading.style.display = 'block';
-                    linkValidation.style.display = 'none';
-                    
-                    const voucherHash = extractVoucherHash(link);
-                    if (!voucherHash) {
-                        throw new Error('ไม่สามารถดึงรหัสอั่งเปาได้');
-                    }
-                    
-                    // Try alternative verification endpoint first
-                    try {
-                        const formData = new FormData();
-                        formData.append('voucher_hash', voucherHash);
-                        
-                        const response = await fetch('verify_voucher_alt.php', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            
-                            if (data.success && data.voucher) {
-                                showVoucherInfo(data.voucher);
-                                return;
-                            } else if (data.allow_manual) {
-                                showWarningAndAllowSubmission();
-                                return;
-                            }
-                        }
-                    } catch (error) {
-                        console.log('Alternative verification failed:', error.message);
-                    }
-                    
-                    // Fallback: Show warning but allow manual processing
-                    showWarningAndAllowSubmission();
-                    
-                } catch (error) {
-                    console.error('Verification failed:', error);
-                    showWarningAndAllowSubmission();
-                } finally {
-                    verificationLoading.style.display = 'none';
-                }
-            }
-            
-            async function verifyVoucherClientSide(voucherHash) {
-                try {
-                    // Client-side verification using CORS proxy or direct API call
-                    const verifyUrl = `https://gift.truemoney.com/campaign/vouchers/${voucherHash}`;
-                    
-                    // Try to use a CORS proxy for client-side verification
-                    const proxyUrls = [
-                        `https://api.allorigins.win/get?url=${encodeURIComponent(verifyUrl)}`,
-                        `https://cors-anywhere.herokuapp.com/${verifyUrl}`,
-                        verifyUrl // Direct call (might fail due to CORS)
-                    ];
-                    
-                    let lastError;
-                    
-                    for (const url of proxyUrls) {
-                        try {
-                            const response = await fetch(url, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'application/json, text/plain, */*',
-                                    'Accept-Language': 'th-TH,th;q=0.9,en;q=0.8',
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                                }
-                            });
-                            
-                            if (!response.ok) continue;
-                            
-                            let data;
-                            if (url.includes('allorigins.win')) {
-                                const proxyData = await response.json();
-                                data = JSON.parse(proxyData.contents);
-                            } else {
-                                data = await response.json();
-                            }
-                            
-                            if (data && data.data && data.data.voucher) {
-                                const voucher = data.data.voucher;
-                                const voucherInfo = {
-                                    amount: voucher.amount_baht || voucher.amount || 0,
-                                    status: voucher.status || 'ACTIVE',
-                                    voucher_id: voucher.voucher_id || voucherHash
-                                };
-                                
-                                if (voucherInfo.amount > 0) {
-                                    showVoucherInfo(voucherInfo);
-                                    return;
-                                }
-                            }
-                            
-                        } catch (err) {
-                            lastError = err;
-                            console.log(`Failed with ${url}:`, err.message);
-                            continue;
-                        }
-                    }
-                    
-                    // If all methods fail, show a warning but allow submission
-                    showWarningAndAllowSubmission();
-                    
-                } catch (error) {
-                    console.error('Client-side verification failed:', error);
-                    showWarningAndAllowSubmission();
-                }
-            }
-            
-            function showVoucherInfo(voucher) {
-                currentVoucherData = voucher;
-                
-                // Update voucher info display
-                document.getElementById('voucher-amount').textContent = `${voucher.amount} บาท`;
-                document.getElementById('voucher-credits').textContent = `${voucher.amount} เครดิต`;
-                document.getElementById('voucher-status').textContent = voucher.status === 'ACTIVE' ? 'พร้อมใช้งาน' : voucher.status;
-                
-                // Show voucher info
-                voucherInfo.style.display = 'block';
-                linkValidation.style.display = 'block';
-                
-                // Enable submit button
-                verifyBtn.disabled = false;
-                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> ยืนยันการเติมเงิน';
-            }
-            
-            function showWarningAndAllowSubmission() {
-                // Show a warning but still allow submission for manual processing
-                linkError.style.display = 'block';
-                linkErrorText.textContent = 'ไม่สามารถตรวจสอบอั่งเปาอัตโนมัติได้ ระบบจะตรวจสอบด้วยตนเองหลังจากส่งฟอร์ม';
-                linkErrorText.style.color = '#f59e0b'; // Warning color instead of error
-                
-                // Still allow submission
-                verifyBtn.disabled = false;
-                verifyBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ส่งเพื่อตรวจสอบด้วยตนเอง';
             }
             
             // Set initial active tab based on available methods
